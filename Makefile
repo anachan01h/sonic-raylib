@@ -1,5 +1,5 @@
-bin/sonic-demo: bin/ src/main.c
-	gcc src/main.c -o bin/sonic-demo -lraylib -lm
+bin/sonic-demo: bin/ src/main.c src/sonic.c inc/sonic.h
+	gcc src/main.c src/sonic.c -o bin/sonic-demo -lraylib -lm -L../inc
 
 bin/:
 	mkdir bin

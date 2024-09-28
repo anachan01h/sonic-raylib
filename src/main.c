@@ -18,20 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * -------------------------------------------------------------------------- */
 
-#include <math.h>
-#include "raylib.h"
-
-#define ACCELERATION 0.046875
-#define TOP_SPEED 6
-
-typedef struct Player {
-    Vector2 pos;
-    Vector2 speed;
-    float ground_speed;
-    float ground_angle;
-    int width_radius;
-    int height_radius;
-} Player;
+#include "../inc/sonic.h"
 
 int main(void) {
     const int screen_width = 640;
@@ -52,40 +39,7 @@ int main(void) {
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
-        if (IsKeyDown(KEY_LEFT)) {
-            if (sonic.ground_speed > 0) {
-                sonic.ground_speed -= 0.5;
-                if (sonic.ground_speed <= 0)
-                    sonic.ground_speed = -0.5;
-            } else if (sonic.ground_speed > -TOP_SPEED) {
-                sonic.ground_speed -= ACCELERATION;
-                if (sonic.ground_speed <= -TOP_SPEED)
-                    sonic.ground_speed = -TOP_SPEED;
-            }
-        }
-
-        if (IsKeyDown(KEY_RIGHT)) {
-            if (sonic.ground_speed < 0) {
-                sonic.ground_speed += 0.5;
-                if (sonic.ground_speed >= 0)
-                    sonic.ground_speed = 0.5;
-            } else if (sonic.ground_speed < TOP_SPEED) {
-                sonic.ground_speed += ACCELERATION;
-                if (sonic.ground_speed >= TOP_SPEED)
-                    sonic.ground_speed = TOP_SPEED;
-            }
-        }
-
-        if (IsKeyUp(KEY_RIGHT) && IsKeyUp(KEY_LEFT))
-            sonic.ground_speed -= copysign(fminf(fabsf(sonic.ground_speed), ACCELERATION), sonic.ground_speed);
-        
-        // Atualiza velocidade
-        sonic.speed.x = sonic.ground_speed * cosf(sonic.ground_angle);
-        sonic.speed.y = sonic.ground_speed * (-sinf(sonic.ground_angle));
-        
-        // Atualiza posição
-        sonic.pos.x += sonic.speed.x;
-        sonic.pos.y += sonic.speed.y;
+        sonic_update(&sonic);
         
         BeginDrawing();
         
