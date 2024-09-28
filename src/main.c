@@ -18,52 +18,92 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * -------------------------------------------------------------------------- */
 
+#include <math.h>
 #include "raylib.h"
+
+#define ACCELERATION 0.046875
+#define TOP_SPEED 6
+
+typedef struct Player {
+    Vector2 pos;
+    Vector2 speed;
+    float ground_speed;
+    float ground_angle;
+    int width_radius;
+    int height_radius;
+} Player;
 
 int main(void) {
     const int screen_width = 640;
     const int screen_height = 480;
+    Player sonic = { 0 };
 
     InitWindow(screen_width, screen_height, "Sonic Demo");
 
-    Texture2D sonic = LoadTexture("./img/running.png");
+    sonic.pos = (Vector2) {20, 359};
+    sonic.speed = (Vector2) {0, 0};
+    sonic.width_radius = 20;
+    sonic.height_radius = 20;
+    sonic.ground_speed = 0;
+    sonic.ground_angle = 0;
 
-    Vector2 pos = { 0, 444 };
-    Rectangle frame_size = { 0.0, 0.0, sonic.width/4, sonic.height };
-    
-    int current_frame = 0;
-    int frame_counter = 0;
-    int frame_speed = 15;
+    Rectangle floor1 = {0, 380 , 640, 100};
 
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
-        ++frame_counter;
-        pos.x += 4;
-
-        if (pos.x >= 640)
-            pos.x = -31;
-
-        if (frame_counter >= 60 / frame_speed) {
-            frame_counter = 0;
-            ++current_frame;
-
-            if (current_frame > 3)
-                current_frame = 0;
-
-            frame_size.x = current_frame * sonic.width/4;
+        if (IsKeyDown(KEY_LEFT)) {
+            if (sonic.ground_speed > 0) {
+                sonic.ground_speed -= 0.5;
+                if (sonic.ground_speed <= 0)
+                    sonic.ground_speed = -0.5;
+            } else if (sonic.ground_speed > -TOP_SPEED) {
+                sonic.ground_speed -= ACCELERATION;
+                if (sonic.ground_speed <= -TOP_SPEED)
+                    sonic.ground_speed = -TOP_SPEED;
+            }
         }
 
+        if (IsKeyDown(KEY_RIGHT)) {
+            if (sonic.ground_speed < 0) {
+                sonic.ground_speed += 0.5;
+                if (sonic.ground_speed >= 0)
+                    sonic.ground_speed = 0.5;
+            } else if (sonic.ground_speed < TOP_SPEED) {
+                sonic.ground_speed += ACCELERATION;
+                if (sonic.ground_speed >= TOP_SPEED)
+                    sonic.ground_speed = TOP_SPEED;
+            }
+        }
+
+        if (IsKeyUp(KEY_RIGHT) && IsKeyUp(KEY_LEFT))
+            sonic.ground_speed -= copysign(fminf(fabsf(sonic.ground_speed), ACCELERATION), sonic.ground_speed);
+        
+        // Atualiza velocidade
+        sonic.speed.x = sonic.ground_speed * cosf(sonic.ground_angle);
+        sonic.speed.y = sonic.ground_speed * (-sinf(sonic.ground_angle));
+        
+        // Atualiza posição
+        sonic.pos.x += sonic.speed.x;
+        sonic.pos.y += sonic.speed.y;
+        
         BeginDrawing();
         
-        ClearBackground(BLUE);
+        ClearBackground(DARKGRAY);
 
-        DrawTextureRec(sonic, frame_size, pos, WHITE);
+        DrawRectangleRec(floor1, DARKGREEN);
+
+        Rectangle player_rect = {
+            sonic.pos.x - sonic.width_radius,
+            sonic.pos.y - sonic.height_radius,
+            2 * sonic.width_radius + 1,
+            2 * sonic.height_radius + 1,
+        };
+        DrawRectangleRec(player_rect, BLUE);
 
         EndDrawing();
     }
 
-    UnloadTexture(sonic);
     CloseWindow();
 
     return 0;
